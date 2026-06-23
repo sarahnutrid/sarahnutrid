@@ -1,0 +1,842 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans, system-ui); color: var(--color-text-primary); background: transparent; }
+
+.module-header {
+  border-left: 4px solid #1D9E75;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--color-background-secondary);
+  border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0;
+}
+.module-badge {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #0F6E56;
+  margin-bottom: 0.5rem;
+}
+.module-title { font-size: 20px; font-weight: 500; margin-bottom: 0.4rem; }
+.module-desc { font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; }
+
+.nav-tabs {
+  display: flex; gap: 0; border-bottom: 0.5px solid var(--color-border-tertiary);
+  margin-bottom: 2rem; overflow-x: auto; scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+  padding: 0.7rem 1rem; font-size: 13px; font-weight: 400;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary); cursor: pointer; white-space: nowrap;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.tab-btn.active {
+  color: #0F6E56; border-bottom-color: #1D9E75; font-weight: 500;
+}
+.tab-btn:hover:not(.active) { color: var(--color-text-primary); }
+
+.section { display: none; }
+.section.active { display: block; }
+
+.topic-card {
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background-primary);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.topic-header {
+  padding: 1rem 1.25rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  background: var(--color-background-secondary);
+  user-select: none;
+}
+.topic-title { font-size: 15px; font-weight: 500; }
+.topic-num {
+  font-size: 11px; color: #0F6E56; font-weight: 500;
+  background: #E1F5EE; padding: 2px 8px; border-radius: 4px; margin-right: 10px;
+}
+.topic-left { display: flex; align-items: center; }
+.chevron { font-size: 14px; color: var(--color-text-secondary); transition: transform 0.2s; }
+.chevron.open { transform: rotate(180deg); }
+.topic-body { display: none; padding: 0; }
+.topic-body.open { display: block; }
+
+.subsection {
+  padding: 1.25rem 1.5rem;
+  border-top: 0.5px solid var(--color-border-tertiary);
+}
+.subsection:first-child { border-top: none; }
+.subsection-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--color-text-secondary); margin-bottom: 0.75rem;
+}
+.subsection-label .dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-teal { background: #1D9E75; }
+.dot-blue { background: #378ADD; }
+.dot-amber { background: #BA7517; }
+.dot-purple { background: #7F77DD; }
+.dot-coral { background: #D85A30; }
+
+.subsection p, .subsection li { font-size: 14px; line-height: 1.75; }
+.subsection ul { padding-left: 1.25rem; }
+.subsection li { margin-bottom: 0.35rem; }
+
+.ref-box {
+  background: #E1F5EE; border: 0.5px solid #9FE1CB;
+  border-radius: var(--border-radius-md); padding: 0.85rem 1rem;
+  font-size: 13px; line-height: 1.6;
+}
+.ref-box strong { color: #085041; font-weight: 500; }
+
+.highlight-box {
+  background: var(--color-background-secondary);
+  border-left: 3px solid #378ADD; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+  padding: 0.85rem 1rem; margin: 0.75rem 0; font-size: 13.5px; line-height: 1.7;
+}
+.warning-box {
+  background: #FAEEDA; border-left: 3px solid #BA7517;
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+  padding: 0.85rem 1rem; margin: 0.75rem 0; font-size: 13.5px; line-height: 1.7; color: #412402;
+}
+.danger-box {
+  background: #FAECE7; border-left: 3px solid #D85A30;
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+  padding: 0.85rem 1rem; margin: 0.75rem 0; font-size: 13.5px; line-height: 1.7; color: #4A1B0C;
+}
+
+.formula-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 0.75rem 0; }
+.formula-card {
+  background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md); padding: 0.75rem; font-size: 13px;
+}
+.formula-card .label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; font-weight: 500; }
+.formula-card .value { font-weight: 500; font-size: 14px; }
+
+.case-box {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg); padding: 1.25rem;
+}
+.case-header { font-size: 13px; font-weight: 500; color: #0F6E56; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.case-data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+.case-datum {
+  background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md); padding: 8px 10px;
+}
+.case-datum .dlabel { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 2px; }
+.case-datum .dvalue { font-size: 14px; font-weight: 500; }
+.q-card {
+  background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md); padding: 0.85rem 1rem; margin-bottom: 0.5rem;
+}
+.q-label { font-size: 11px; color: #378ADD; font-weight: 500; margin-bottom: 4px; text-transform: uppercase; }
+.q-text { font-size: 13.5px; line-height: 1.65; }
+
+.table-wrapper { overflow-x: auto; margin: 0.75rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--color-background-secondary); padding: 8px 10px; text-align: left; font-weight: 500; font-size: 12px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+td { padding: 7px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+tr:last-child td { border-bottom: none; }
+
+.tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin: 2px; font-weight: 500; }
+.tag-teal { background: #E1F5EE; color: #085041; }
+.tag-blue { background: #E6F1FB; color: #0C447C; }
+.tag-amber { background: #FAEEDA; color: #412402; }
+.tag-coral { background: #FAECE7; color: #4A1B0C; }
+.tag-purple { background: #EEEDFE; color: #26215C; }
+
+h4 { font-size: 14px; font-weight: 500; margin: 1rem 0 0.5rem; }
+</style>
+</head>
+<body>
+
+<div class="module-header">
+  <div class="module-badge">Plan de Estudios Avanzado · Nutrición Clínica y Soporte Nutricional</div>
+  <div class="module-title">Módulo 1 — Fundamentos Elementales de la Nutrición Clínica</div>
+  <div class="module-desc">Base fisiopatológica, diagnóstica y terapéutica del soporte nutricional artificial. Nivel: Fundacional · Progresión hacia complejidad hospitalaria.</div>
+</div>
+
+<div class="nav-tabs" id="tabs">
+  <button class="tab-btn active" onclick="showTab('t1')">1.1 Ayuno vs. Estrés</button>
+  <button class="tab-btn" onclick="showTab('t2')">1.2 Desnutrición & Sarcopenia</button>
+  <button class="tab-btn" onclick="showTab('t3')">1.3 Síndrome de Realimentación</button>
+  <button class="tab-btn" onclick="showTab('t4')">1.4 Soporte Nutricional Artificial</button>
+</div>
+
+<!-- ============ TAB 1.1 ============ -->
+<div id="t1" class="section active">
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left">
+        <span class="topic-num">1</span>
+        <span class="topic-title">Referencia Bibliográfica Exacta</span>
+      </div>
+      <span class="chevron open">▾</span>
+    </div>
+    <div class="topic-body open">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-teal"></span>Guía primaria</div>
+        <div class="ref-box">
+          <strong>ESPEN Clinical Nutrition Guidelines 2021 — "Clinical Nutrition in Surgery" & "Clinical Nutrition in Critical Care" (Clin Nutr 2021;40:4745-4761).</strong> Complementada con ASPEN Critical Care Guidelines 2022 (JPEN 2022;46:12-41) y el consenso ESPEN/ESICM sobre metabolismo en el paciente hospitalizado (2023). Para la fisiopatología del ayuno: revisión de Cahill GF actualizada por Müller MJ (Eur J Clin Nutr 2020).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left">
+        <span class="topic-num">2</span>
+        <span class="topic-title">Fisiopatología y Alteración Metabólica</span>
+      </div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-blue"></span>Respuesta metabólica al ayuno (adaptativo)</div>
+        <div class="highlight-box">
+          El ayuno simple sigue una secuencia ordenada de prioridades energéticas: glucogenólisis hepática (0-24h), neoglucogénesis a partir de aminoácidos y glicerol (24-72h), y cetoadaptación cerebral con máxima cetogénesis a partir de la 3ª semana de inanición prolongada.
+        </div>
+        <ul>
+          <li><strong>Fase glucogenolítica (0-16h):</strong> El glucagón suprime la insulina. Se movilizan ~100-150g de glucógeno hepático y ~300-400g muscular. Insulinemia baja → ↑ lipolisis. No hay degradación proteica significativa.</li>
+          <li><strong>Fase gluconeogénica (16h-3 días):</strong> Cortisol y glucagón sostienen la gluconeogénesis hepática a partir de alanina (ciclo glucosa-alanina de Felig), glutamina renal y glicerol. Pérdida proteica de 75-100g/día inicialmente.</li>
+          <li><strong>Fase cetoadaptada (>7-10 días):</strong> ↑↑ Ácidos grasos libres → oxidación hepática → β-hidroxibutirato y acetoacetato. El cerebro sustituye 60-70% de glucosa por cuerpos cetónicos. Proteolisis cae a 20-30g/día. "Proteína-sparing" adaptativo.</li>
+          <li><strong>Regulación hormonal:</strong> ↓ Insulina, T3, IGF-1; ↑ Glucagón, GH (con resistencia periférica), cortisol moderado, leptina ↓↓, grelina ↑.</li>
+        </ul>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-coral"></span>Respuesta metabólica al estrés (maladaptativa)</div>
+        <div class="danger-box">
+          En la injuria/estrés, la respuesta metabólica es OPUESTA al ayuno: existe hipermetabolismo con catabolismo proteico obligatorio, resistencia a la cetoadaptación y resistencia a la insulina, independiente del aporte calórico. La "sobrealimentación" no corrige el catabolismo.
+        </div>
+        <ul>
+          <li><strong>Eje neuroendocrino:</strong> Activación del eje HHA → ↑ ACTH → hipercortisolemia (cortisol >700 nmol/L en estrés severo). ↑ Catecolaminas → glucogenólisis y resistencia insulínica. GH elevada con IGF-1 paradójicamente bajo (resistencia hepática).</li>
+          <li><strong>Respuesta inflamatoria sistémica:</strong> Citoquinas proinflamatorias (TNF-α, IL-1β, IL-6) → proteólisis muscular por activación del sistema ubiquitina-proteasoma. Pérdidas proteicas de 150-300g/día en sepsis severa. Síntesis de proteínas de fase aguda (PCR, fibrinógeno, ferritina) a expensas de proteínas viscerales (albúmina, prealbúmina).</li>
+          <li><strong>Perfil metabólico distintivo:</strong> Hiperglucemia de estrés (gluconeogénesis hepática incontrolada), hipertrigliceridemia (↓ LPL por TNF-α), proteólisis continua a pesar de aporte exógeno, cociente respiratorio cercano a 0.85.</li>
+        </ul>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Variable</th><th>Ayuno simple</th><th>Estrés/Sepsis</th></tr></thead>
+            <tbody>
+              <tr><td>Gasto energético basal</td><td>↓ 10-20%</td><td>↑ 30-100%</td></tr>
+              <tr><td>Glucemia</td><td>↓ normal/baja</td><td>↑ (hiperglucemia)</td></tr>
+              <tr><td>Cetogénesis</td><td>↑↑ (adaptativa)</td><td>↓ (suprimida)</td></tr>
+              <tr><td>Proteólisis</td><td>↓ tras adaptación</td><td>↑↑ persistente</td></tr>
+              <tr><td>Insulina</td><td>↓</td><td>↑ (resistencia)</td></tr>
+              <tr><td>Cortisol</td><td>moderado</td><td>↑↑</td></tr>
+              <tr><td>Respuesta a nutrición</td><td>Suprime catabolismo</td><td>Parcialmente ineficaz</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left">
+        <span class="topic-num">3</span>
+        <span class="topic-title">Tamizaje, Evaluación Diagnóstica e Indicación</span>
+      </div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-purple"></span>Herramientas de cribado aplicadas al contexto</div>
+        <ul>
+          <li><strong>NRS-2002 (hospitalizado):</strong> Valora IMC, pérdida de peso, ingesta reciente y gravedad de la enfermedad. Puntuación ≥3 = riesgo nutricional → iniciar soporte. Validado en ensayos clínicos RCT. Sensibilidad 62%, especificidad 93% para desnutrición.</li>
+          <li><strong>MUST (ambulatorio/comunitario):</strong> IMC + pérdida de peso involuntaria + efecto de enfermedad aguda. ≥2 puntos: alto riesgo. Simple y rápido (&lt;3 min).</li>
+          <li><strong>NUTRIC Score (UCI):</strong> Age, APACHE II, SOFA, número de comorbilidades, días desde admisión al hospital hasta UCI, IL-6. Score ≥5 (con IL-6) o ≥6 (sin IL-6) = alto riesgo nutricional. Predice mortalidad y beneficio del soporte precoz.</li>
+        </ul>
+        <h4>Marcadores bioquímicos e interpretación en el contexto estrés vs. ayuno</h4>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Marcador</th><th>Valor</th><th>Interpretación clínica</th></tr></thead>
+            <tbody>
+              <tr><td>Albúmina</td><td>&lt;3.5 g/dL</td><td>Marcador de inflamación y gravedad, NO de estado nutricional agudo. Vida media 20 días.</td></tr>
+              <tr><td>Prealbúmina</td><td>&lt;15 mg/dL</td><td>Vida media 2-3 días. Mejor marcador de respuesta nutricional. Cae en estrés agudo.</td></tr>
+              <tr><td>PCR</td><td>>10 mg/L</td><td>Confirma estado inflamatorio activo. Invalidates proteínas viscerales como marcador nutricional.</td></tr>
+              <tr><td>Glucemia</td><td>140-180 mg/dL</td><td>Meta en UCI. >180 = sobrealimentación o resistencia insulínica severa.</td></tr>
+              <tr><td>Triglicéridos</td><td>>400 mg/dL</td><td>Contraindicación relativa de lípidos IV. Monitorear en NP.</td></tr>
+              <tr><td>Balance nitrogenado</td><td>N Urinario (g/24h) × 6.25 - aporte proteico</td><td>Balance negativo = catabolismo neto. Meta: -2 a 0 g/día en UCI.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left">
+        <span class="topic-num">4</span>
+        <span class="topic-title">Prescripción de Terapia Nutricional</span>
+      </div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-amber"></span>Requerimientos energéticos y proteicos</div>
+        <div class="formula-grid">
+          <div class="formula-card"><div class="label">Ayuno simple</div><div class="value">20-25 kcal/kg/día</div></div>
+          <div class="formula-card"><div class="label">Estrés moderado</div><div class="value">25-30 kcal/kg/día</div></div>
+          <div class="formula-card"><div class="label">Estrés severo/UCI</div><div class="value">CI indirecta o 25 kcal/kg</div></div>
+          <div class="formula-card"><div class="label">Proteínas - ayuno</div><div class="value">0.8-1.0 g/kg/día</div></div>
+          <div class="formula-card"><div class="label">Proteínas - estrés</div><div class="value">1.2-2.0 g/kg/día</div></div>
+        </div>
+        <div class="highlight-box">
+          <strong>Gold standard energético:</strong> Calorimetría indirecta (CI). Mide VO₂ y VCO₂ → GER real. Cuando no disponible: ecuación de Harris-Benedict con factor de estrés (× 1.2-1.5) o peso ajustado en obesidad [PA = PI + 0.25 × (PR - PI)].
+        </div>
+        <h4>Vías de acceso y estrategia</h4>
+        <ul>
+          <li><strong>Ayuno simple &lt;5 días:</strong> Soporte oral enriquecido o suplementación oral (ONS). Preferir vía oral siempre que sea posible y segura.</li>
+          <li><strong>Estrés con tracto GI funcional:</strong> Nutrición enteral (NE) temprana (24-48h). SNG para gástrica; SNY o PEG-J para yeyunal si riesgo de aspiración alto.</li>
+          <li><strong>Estrés con tracto GI no funcionante:</strong> NP complementaria o total después de 3-7 días de NE insuficiente o contraindicación absoluta de NE.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left">
+        <span class="topic-num">5</span>
+        <span class="topic-title">Caso Clínico de Cierre</span>
+      </div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="case-box">
+          <div class="case-header">Caso 1.1 · Ayuno prolongado vs. estrés quirúrgico</div>
+          <p style="font-size:13.5px; line-height:1.7; margin-bottom:1rem;">Mujer de 58 años, IMC 17.2 kg/m², pérdida de 9 kg en 3 meses (→16% del peso habitual), ingresada por obstrucción intestinal parcial por bridas. Ayuno preoperatorio de 7 días (sólo glucosalino). Sometida a laparotomía exploradora con lisis de bridas y resección de 30 cm de intestino delgado.</p>
+          <div class="case-data-grid">
+            <div class="case-datum"><div class="dlabel">Albúmina</div><div class="dvalue">2.1 g/dL</div></div>
+            <div class="case-datum"><div class="dlabel">Prealbúmina</div><div class="dvalue">8 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">PCR</div><div class="dvalue">142 mg/L</div></div>
+            <div class="case-datum"><div class="dlabel">Glucemia</div><div class="dvalue">198 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">Triglicéridos</div><div class="dvalue">312 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">Potasio</div><div class="dvalue">3.0 mEq/L</div></div>
+            <div class="case-datum"><div class="dlabel">Fósforo</div><div class="dvalue">1.8 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">NRS-2002</div><div class="dvalue">6 puntos</div></div>
+          </div>
+          <p style="font-size:13px; color:var(--color-text-secondary); margin-bottom:1rem; line-height:1.6;">Evolución: Al 2° día PO, edemas en MMII, confusión leve, debilidad muscular progresiva.</p>
+          <div class="q-card"><div class="q-label">Pregunta 1</div><div class="q-text">Dado el perfil metabólico (albúmina 2.1, PCR 142), ¿la hipoalbuminemia refleja desnutrición crónica o respuesta inflamatoria aguda postquirúrgica? ¿Cómo diferencia fisiopatológicamente ambos escenarios y cómo cambia eso el objetivo de proteínas (g/kg/día) en las primeras 72h?</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 2</div><div class="q-text">Los hallazgos al 2° día PO (edema, confusión, fosfato 1.8 mg/dL, potasio 3.0 mEq/L) orientan a síndrome de realimentación incipiente. ¿Cuál fue el error en la estrategia de reintroducción nutricional y cuál debería ser el protocolo correctivo inmediato según las guías NICE 2020?</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 3</div><div class="q-text">Con triglicéridos de 312 mg/dL en el contexto inflamatorio severo (PCR 142), ¿está contraindicada la NP con emulsiones lipídicas? ¿Cuál es el umbral de triglicéridos para suspender lípidos IV y qué estrategia lipídica alternativa (tipo, dosis, monitoreo) propondría usted?</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 1.2 ============ -->
+<div id="t2" class="section">
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">1</span><span class="topic-title">Referencia Bibliográfica Exacta</span></div>
+      <span class="chevron open">▾</span>
+    </div>
+    <div class="topic-body open">
+      <div class="subsection">
+        <div class="ref-box">
+          <strong>Criterios GLIM 2019 (Global Leadership Initiative on Malnutrition):</strong> Jensen GL et al. Clin Nutr 2019;38:1-9. Consenso internacional ASPEN/ESPEN/FELANPE/PENSA. <br><br>
+          <strong>Sarcopenia:</strong> Cruz-Jentoft AJ et al. — EWGSOP2 (European Working Group on Sarcopenia in Older People 2), Age Ageing 2019;48:16-31. Revisión AWGS 2019 para población asiática (Chen LK, J Cachexia 2020). <br><br>
+          <strong>Desnutrición hospitalaria:</strong> ESPEN Guideline "Clinical Nutrition in Surgery" 2021 y "Clinical Nutrition in Hospitals" 2022.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">2</span><span class="topic-title">Fisiopatología y Alteración Metabólica</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-blue"></span>Desnutrición: mecanismos integrados</div>
+        <ul>
+          <li><strong>Desnutrición por inanición:</strong> Déficit calórico-proteico puro → depleción progresiva de reservas. Predominan pérdidas de grasa y masa muscular. Adaptación neuroendocrina con reducción del TMB.</li>
+          <li><strong>Desnutrición relacionada con enfermedad sin inflamación:</strong> Anorexia, disfagia, síndromes de malabsorción. Sin activación del sistema ubiquitina-proteasoma. Responde bien al soporte nutricional.</li>
+          <li><strong>Desnutrición relacionada con inflamación aguda o crónica:</strong> Citoquinas (IL-6, TNF-α) → proteólisis muscular irreversible a corto plazo, lipólisis, anorexia central (leptina, CCK). Resistencia anabólica: el músculo no responde normalmente al aporte proteico exógeno.</li>
+          <li><strong>Mecanismo molecular de la pérdida muscular:</strong> ↑ Ubiquitina ligasas (MuRF1, atrogina-1) → degradación de miosina y actina. ↓ mTORC1 (por AMPK activado en déficit energético) → ↓ síntesis proteica. En sarcopenia crónica: acumulación de grasa intramuscular, ↑ miostatina, ↓ células satélite.</li>
+        </ul>
+        <div class="warning-box">
+          <strong>Resistencia anabólica:</strong> En pacientes hospitalizados con inflamación activa, dosis proteicas de 1.2-1.5 g/kg/día pueden ser insuficientes para revertir el balance nitrogenado negativo. No es falla del tratamiento; es fisiopatología de la enfermedad aguda.
+        </div>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-coral"></span>Sarcopenia: fisiopatología multiaxial</div>
+        <ul>
+          <li><strong>Eje muscular-adiposo:</strong> La infiltración grasa intramuscular (mioesteatosis) ↓ calidad muscular independientemente de la masa. Biomarcador: densidad muscular en TC (UH).</li>
+          <li><strong>Disfunción mitocondrial:</strong> ↓ biogénesis mitocondrial (↓ PGC-1α), ↑ estrés oxidativo → disfunción contráctil y fatiga muscular precoz.</li>
+          <li><strong>Eje inflamatorio crónico:</strong> "Inflammaging" → IL-6 crónica → proteólisis continua de bajo grado en adultos mayores.</li>
+          <li><strong>Eje hormonal:</strong> ↓ Testosterona, IGF-1, DHEA y vitamina D activa → pérdida de señal anabólica.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">3</span><span class="topic-title">Criterios GLIM y Diagnóstico de Sarcopenia</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-purple"></span>Criterios GLIM 2019 — Diagnóstico por fenotipos + etiología</div>
+        <div class="highlight-box">
+          El diagnóstico GLIM requiere ≥1 criterio fenotípico + ≥1 criterio etiológico. El cribado previo (NRS-2002/MUST/MNA) es obligatorio como primer paso.
+        </div>
+        <h4>Criterios fenotípicos (al menos 1):</h4>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Criterio</th><th>Umbral</th></tr></thead>
+            <tbody>
+              <tr><td>Pérdida de peso no intencional</td><td>>5% en 6 meses o >10% en >6 meses</td></tr>
+              <tr><td>IMC bajo</td><td>&lt;20 kg/m² (&lt;70 años) o &lt;22 kg/m² (≥70 años). Ajuste por región: &lt;18.5 Asia.</td></tr>
+              <tr><td>Masa muscular reducida</td><td>Medido por DEXA, BIA, TC o circunferencia muscular del brazo (por debajo del percentil 10 de referencia)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Criterios etiológicos (al menos 1):</h4>
+        <ul>
+          <li>Ingesta/absorción reducida: &lt;50% del requerimiento por >1 semana, o cualquier reducción crónica &gt;2 semanas, o malabsorción crónica documentada.</li>
+          <li>Inflamación: enfermedad aguda o lesión severa; enfermedad crónica con estado inflamatorio.</li>
+        </ul>
+        <h4>Severidad GLIM:</h4>
+        <ul>
+          <li><strong>Estadio 1 (Moderada):</strong> Pérdida de peso 5-10% / 6 meses o 10-20% / >6 meses; IMC &lt;20/22; masa muscular levemente reducida.</li>
+          <li><strong>Estadio 2 (Severa):</strong> Pérdida de peso >10% / 6 meses o >20% / >6 meses; IMC &lt;18.5/20; masa muscular severamente reducida.</li>
+        </ul>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-teal"></span>Diagnóstico de Sarcopenia — EWGSOP2 2019</div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Paso</th><th>Herramienta</th><th>Umbral diagnóstico</th></tr></thead>
+            <tbody>
+              <tr><td>Cribado</td><td>SARC-F (≥4 puntos = probable)</td><td>5 ítems, autoadministrado</td></tr>
+              <tr><td>Fuerza muscular</td><td>Dinamometría de prensión (handgrip)</td><td>Hombres &lt;27 kg / Mujeres &lt;16 kg</td></tr>
+              <tr><td>Masa muscular</td><td>DEXA: índice músculo esquelético apendicular</td><td>Hombres &lt;7.0 kg/m² / Mujeres &lt;5.5 kg/m²</td></tr>
+              <tr><td></td><td>BIA: masa muscular total</td><td>Hombres &lt;7.0 kg/m² / Mujeres &lt;5.7 kg/m²</td></tr>
+              <tr><td>Rendimiento físico</td><td>SPPB (Short Physical Performance Battery)</td><td>≤8 puntos = sarcopenia severa</td></tr>
+              <tr><td></td><td>Velocidad de marcha (4m)</td><td>&lt;0.8 m/s</td></tr>
+              <tr><td></td><td>TUG (Timed Up and Go)</td><td>>20 segundos = grave</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="warning-box">
+          <strong>Sarcopenia probable:</strong> Fuerza ↓ → Confirmar con masa muscular. Si masa ↓ = Sarcopenia confirmada. Si además rendimiento físico ↓ = Sarcopenia severa (mayor mortalidad, complicaciones, hospitalizaciones).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">4</span><span class="topic-title">Prescripción de Terapia Nutricional</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-amber"></span>Estrategia nutricional en desnutrición y sarcopenia</div>
+        <div class="formula-grid">
+          <div class="formula-card"><div class="label">Energía (desnutrición)</div><div class="value">25-30 kcal/kg/día (peso actual o ajustado)</div></div>
+          <div class="formula-card"><div class="label">Proteínas (sarcopenia)</div><div class="value">1.2-1.5 g/kg/día. En severa: hasta 2.0 g/kg</div></div>
+          <div class="formula-card"><div class="label">Leucina (anabolismo)</div><div class="value">2.5-3.0 g/comida (activación mTOR)</div></div>
+          <div class="formula-card"><div class="label">β-HMB</div><div class="value">3 g/día en sarcopenia severa/caquexia</div></div>
+        </div>
+        <h4>Intervención nutricional integrada:</h4>
+        <ul>
+          <li><strong>Oral/enriquecida:</strong> ONS hipercalóricos hiperproteicos (1.5-2.4 kcal/mL, >18g proteína/100mL). Complementar con vitamina D 800-2000 UI/día, calcio, creatina monohidrato (3-5g/día en ensayos).</li>
+          <li><strong>Timing proteico:</strong> Distribuir proteínas en 3-4 tomas de ≥25-30g c/u. No concentrar en una sola comida (efecto "primer pass" hepático).</li>
+          <li><strong>Enteral si vía oral insuficiente:</strong> Fórmula polimérica normo o hipercalórica enriquecida en proteínas. Fórmulas con BCAA elevado en hepatopatía.</li>
+          <li><strong>Ejercicio:</strong> El ejercicio de resistencia progresivo es el único tratamiento que activa mTOR muscular de forma robusta. La nutrición SIN ejercicio tiene efecto anabólico limitado en sarcopenia.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">5</span><span class="topic-title">Caso Clínico de Cierre</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="case-box">
+          <div class="case-header">Caso 1.2 · Desnutrición severa con sarcopenia en adulto mayor</div>
+          <p style="font-size:13.5px; line-height:1.7; margin-bottom:1rem;">Hombre de 74 años, institutionalizado, con EPOC GOLD III y DM2 en insulinoterapia. Remitido por pérdida de 14 kg en 5 meses (peso actual 52 kg, talla 1.68m, IMC 18.4). Refiere disfagia a sólidos, anorexia severa. MNA-FF: 5/14. Velocidad de marcha: 0.6 m/s. Handgrip: 14 kg. Sin edemas, sin ascitis.</p>
+          <div class="case-data-grid">
+            <div class="case-datum"><div class="dlabel">Albúmina</div><div class="dvalue">2.8 g/dL</div></div>
+            <div class="case-datum"><div class="dlabel">Prealbúmina</div><div class="dvalue">12 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">PCR</div><div class="dvalue">22 mg/L</div></div>
+            <div class="case-datum"><div class="dlabel">25-OH Vit D</div><div class="dvalue">9 ng/mL</div></div>
+            <div class="case-datum"><div class="dlabel">Creatinina</div><div class="dvalue">1.3 mg/dL (TFGe 48)</div></div>
+            <div class="case-datum"><div class="dlabel">HbA1c</div><div class="dvalue">7.8%</div></div>
+            <div class="case-datum"><div class="dlabel">SPPB</div><div class="dvalue">6/12 puntos</div></div>
+          </div>
+          <div class="q-card"><div class="q-label">Pregunta 1</div><div class="q-text">Aplicando los criterios GLIM 2019, ¿cumple este paciente criterios de desnutrición? Especifique qué criterio fenotípico y etiológico se cumplen, y clasifique la severidad. ¿La albúmina de 2.8 g/dL modifica el diagnóstico GLIM?</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 2</div><div class="q-text">Con TFGe de 48 mL/min y sarcopenia confirmada, ¿cuál es la prescripción proteica óptima? ¿Hay conflicto entre las guías ESPEN de ERC (restricción proteica) y las guías EWGSOP2 (alta ingesta proteica) en este escenario? Proponga una estrategia basada en evidencia.</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 3</div><div class="q-text">El paciente refiere disfagia a sólidos. ¿Qué evaluación deglutoria estaría indicada y qué adaptaciones de textura (clasificación IDDSI) y suplementación oral (especificar fórmula, volumen y frecuencia) prescribiría para alcanzar 1.5 g/kg/día de proteína con la menor carga renal posible?</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 1.3 ============ -->
+<div id="t3" class="section">
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">1</span><span class="topic-title">Referencia Bibliográfica Exacta</span></div>
+      <span class="chevron open">▾</span>
+    </div>
+    <div class="topic-body open">
+      <div class="subsection">
+        <div class="ref-box">
+          <strong>NICE Guideline CG32 — "Nutrition support for adults: oral nutrition support, enteral tube feeding and parenteral nutrition" (actualización 2020).</strong> Sección 5: Refeeding Syndrome. <br><br>
+          <strong>ASPEN Guidelines 2020:</strong> da Silva JSV et al. "ASPEN Consensus Recommendations for Refeeding Syndrome" — Nutr Clin Pract 2020;35:178-195. <br><br>
+          <strong>Kreymann KG, revisión ESPEN 2023:</strong> Mecanismo bioquímico celular y biomarcadores predictivos (Clin Nutr 2023).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">2</span><span class="topic-title">Fisiopatología y Bioquímica Celular</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-coral"></span>Mecanismo fisiopatológico central</div>
+        <div class="danger-box">
+          El síndrome de realimentación (SR) es una emergencia metabólica precipitada por la reintroducción brusca de carbohidratos/calorías tras un periodo de inanición o depleción. El evento central es la HIPOFOSFATEMIA intracelular aguda, que compromete la síntesis de ATP y 2,3-DPG eritrocitario.
+        </div>
+        <ul>
+          <li><strong>Estado de ayuno:</strong> Depleción crónica de fosfato, potasio, magnesio y tiamina intracelulares. Las concentraciones séricas pueden estar falsamente normales por redistribución.</li>
+          <li><strong>Reintroducción de glucosa/calorías:</strong>
+            <ul style="margin-top:6px">
+              <li>↑↑ Insulina sérica → activa Na⁺/K⁺-ATPasa → entrada masiva de K⁺ al intracelular (hipopotasemia).</li>
+              <li>↑ Glucólisis → consumo masivo de fosfato inorgánico (Pi) para fosforilación oxidativa y síntesis de ATP/2,3-DPG → hipofosfatemia &lt;0.5 mmol/L.</li>
+              <li>↑ Síntesis de proteínas y ácidos nucleicos → consumo adicional de fósforo, magnesio y tiamina.</li>
+              <li>↓ Excreción renal de sodio (efecto insulina antinatriurético) → retención hídrica → edemas, sobrecarga cardíaca.</li>
+            </ul>
+          </li>
+          <li><strong>Consecuencias de la hipofosfatemia severa (&lt;0.32 mmol/L):</strong>
+            <ul style="margin-top:6px">
+              <li>↓ ATP → disfunción de toda célula dependiente de energía: eritrocitos (hemólisis), leucocitos (inmunosupresión), plaquetas (disfunción), miocitos (IC aguda), neuronas (encefalopatía, convulsiones), músculo respiratorio (insuficiencia respiratoria aguda).</li>
+              <li>↓ 2,3-DPG eritrocitario → curva de disociación Hb desviada a la izquierda → hipoxia tisular.</li>
+            </ul>
+          </li>
+          <li><strong>Deficiencia de tiamina (B1):</strong> La glucosa activa la cetotransquetolasa y la piruvato deshidrogenasa → consumo masivo de tiamina. Sin tiamina: ↑ lactato, neuropatía periférica, encefalopatía de Wernicke (oftalmoplejía, ataxia, confusión).</li>
+        </ul>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Electrolito</th><th>Mecanismo de caída</th><th>Consecuencia principal</th></tr></thead>
+            <tbody>
+              <tr><td>Fosfato</td><td>Captación celular (glucólisis) + ↓ reservas previas</td><td>Disfunción eritrocitaria, IC, insuf. respiratoria</td></tr>
+              <tr><td>Potasio</td><td>Entrada intracelular (insulina/Na-K-ATPasa)</td><td>Arritmias ventriculares, paresia</td></tr>
+              <tr><td>Magnesio</td><td>Captación celular (síntesis proteica/ADN)</td><td>Arritmias, tetania, refractariedad al K</td></tr>
+              <tr><td>Tiamina (B1)</td><td>Consumo en vía glucolítica</td><td>Encefalopatía Wernicke, acidosis láctica</td></tr>
+              <tr><td>Sodio/Agua</td><td>Retención renal (antinatriuresis por insulina)</td><td>Sobrecarga hídrica, edema periférico y pulmonar</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">3</span><span class="topic-title">Predicción del Riesgo — Criterios NICE 2020</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-purple"></span>Criterios diagnósticos de riesgo (NICE CG32, 2020)</div>
+        <h4>Alto riesgo de SR (cumple ≥1 criterio mayor):</h4>
+        <ul>
+          <li>IMC &lt;16 kg/m²</li>
+          <li>Pérdida de peso involuntaria >15% en los últimos 3-6 meses</li>
+          <li>Ingesta mínima o nula &gt;10 días</li>
+          <li>Niveles basales bajos de K, P o Mg antes de reiniciar la alimentación</li>
+        </ul>
+        <h4>Riesgo de SR (cumple ≥2 criterios menores):</h4>
+        <ul>
+          <li>IMC &lt;18.5 kg/m²</li>
+          <li>Pérdida de peso involuntaria >10% en 3-6 meses</li>
+          <li>Ingesta mínima >5 días</li>
+          <li>Historia de alcoholismo, uso de insulina, quimioterapia, antiácidos o diuréticos</li>
+        </ul>
+        <div class="highlight-box">
+          <strong>Poblaciones de altísimo riesgo:</strong> Anorexia nervosa (IMC &lt;14), alcoholismo crónico con desnutrición, ayuno post-cirugía bariátrica, reinicio de NE tras ayuno prolongado en UCI, primera semana post-TMO.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">4</span><span class="topic-title">Protocolo de Prevención y Manejo</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-amber"></span>Protocolo NICE 2020 / ASPEN 2020 — paso a paso</div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Paso</th><th>Acción</th><th>Detalle clínico</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Tiamina ANTES de iniciar nutrición</td><td>Tiamina 100-300 mg IV/IM 30 min antes de iniciar glucosa o NE. Vitamina B complejo por 10 días. Crítico: nunca suero glucosado sin tiamina previa.</td></tr>
+              <tr><td>2</td><td>Inicio hipocalórico progresivo</td><td>Iniciar con 10 kcal/kg/día (5 kcal/kg en riesgo extremo). Incrementar 33% cada 2 días según tolerancia electrolítica. Meta calórica plena al día 5-7.</td></tr>
+              <tr><td>3</td><td>Restricción de carbohidratos</td><td>No superar 150-200g glucosa/día en fases iniciales. Fuente energética mixta (lípidos 30-40% del total).</td></tr>
+              <tr><td>4</td><td>Reposición electrolítica agresiva</td><td>Fosfato: 0.3-0.6 mmol/kg/día IV si &lt;0.5 mmol/L. Potasio: 2-4 mEq/kg/día. Magnesio: 0.2 mmol/kg/día IV. Corregir ANTES de iniciar y monitorear c/12h.</td></tr>
+              <tr><td>5</td><td>Restricción hídrica</td><td>1L/día + 500mL adicionales máx. Pesar diariamente. Restricción de sodio 1-2 g/día.</td></tr>
+              <tr><td>6</td><td>Monitoreo</td><td>Electrolitos (P, K, Mg, Na) c/6-12h las primeras 72h. ECG diario. Glucemia c/4-6h. Fósforo sérico: meta ≥0.8 mmol/L.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="danger-box">
+          <strong>Error frecuente:</strong> Normalizar el fósforo sérico no equivale a corregir el déficit intracelular. La reposición debe prolongarse 5-7 días aunque el fósforo sérico se normalice rápidamente. El fosfato oral (Joulie's solution) puede mantener la corrección en pacientes con función GI.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">5</span><span class="topic-title">Caso Clínico de Cierre</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="case-box">
+          <div class="case-header">Caso 1.3 · Síndrome de Realimentación en Anorexia Nervosa</div>
+          <p style="font-size:13.5px; line-height:1.7; margin-bottom:1rem;">Mujer de 23 años con diagnóstico de Anorexia Nervosa restrictiva (AN-R) de 4 años de evolución. Ingresada a urgencias por síncope y bradicardia sinusal (FC 38 lpm). Peso: 34 kg, Talla: 1.62 m, IMC: 13.0 kg/m². Refiere ingesta mínima (&lt;200 kcal/día) durante las últimas 3 semanas. A las 18h del ingreso se inicia suero glucosado 5% + nutrición oral forzada de 1500 kcal por indicación del médico de urgencias.</p>
+          <div class="case-data-grid">
+            <div class="case-datum"><div class="dlabel">Fósforo sérico</div><div class="dvalue">0.42 mmol/L ↓↓</div></div>
+            <div class="case-datum"><div class="dlabel">Potasio</div><div class="dvalue">2.6 mEq/L ↓↓</div></div>
+            <div class="case-datum"><div class="dlabel">Magnesio</div><div class="dvalue">0.54 mmol/L ↓</div></div>
+            <div class="case-datum"><div class="dlabel">Glucemia</div><div class="dvalue">45 mg/dL (hipoglucemia)</div></div>
+            <div class="case-datum"><div class="dlabel">ECG</div><div class="dvalue">QTc 510 ms ↑↑</div></div>
+            <div class="case-datum"><div class="dlabel">Tiamina (B1)</div><div class="dvalue">No medida</div></div>
+            <div class="case-datum"><div class="dlabel">Albúmina</div><div class="dvalue">3.2 g/dL</div></div>
+          </div>
+          <p style="font-size:13px; color:var(--color-text-secondary); margin-bottom:1rem; line-height:1.6;">A las 6h del inicio de la glucosa: desarrolla debilidad muscular, confusión, y tetania. ECG muestra extrasístoles ventriculares frecuentes.</p>
+          <div class="q-card"><div class="q-label">Pregunta 1</div><div class="q-text">¿Cuál fue el error médico que precipitó este cuadro? Describa paso a paso la cascada fisiopatológica que explica la aparición de hipofosfatemia, hipopotasemia y el QTc prolongado tras la reintroducción de glucosa, y explique por qué el suero glucosado fue especialmente deletéreo en este contexto.</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 2</div><div class="q-text">Diseñe el protocolo de manejo de las primeras 72h: a) corrección electrolítica (dosis, vía, velocidad de infusión de fósforo IV), b) meta calórica inicial y progresión semanal, c) suplementación vitamínica específica. Fundamente cada decisión con la guía NICE 2020 o ASPEN 2020.</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 3</div><div class="q-text">La QTc de 510 ms y la bradicardia sinusal representan un riesgo inmediato de muerte súbita. ¿Cómo modifica esto el inicio del soporte nutricional? ¿Está indicada la NE por SNG en este momento o debe posponerse? Especifique los umbrales cardíacos que condicionan el inicio de la alimentación según las guías MARSIPAN (Manejo de personas con Anorexia Nervosa que ponen en riesgo su vida, Royal College of Psychiatrists, 2014 / actualización AED 2021).</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 1.4 ============ -->
+<div id="t4" class="section">
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">1</span><span class="topic-title">Referencia Bibliográfica Exacta</span></div>
+      <span class="chevron open">▾</span>
+    </div>
+    <div class="topic-body open">
+      <div class="subsection">
+        <div class="ref-box">
+          <strong>ESPEN Guideline on Clinical Nutrition in the ICU (Singer P et al., Clin Nutr 2019;38:48-79 y actualización 2023).</strong> <br><br>
+          <strong>ESPEN Guidelines on Parenteral Nutrition (Pironi L et al. y grupos de trabajo, Clin Nutr 2020-2023):</strong> NP en cirugía, UCI, gastroenterología y oncología. <br><br>
+          <strong>ASPEN Parenteral Nutrition Safety Consensus Recommendations 2021 (JPEN).</strong> Fórmula para osmolaridad periférica y criterios para NP central vs. periférica. <br><br>
+          <strong>Mihatsch W, et al. — ESPGHAN/ESPEN Guidelines on Pediatric Parenteral Nutrition 2018</strong> (referencia complementaria para adultos jóvenes).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">2</span><span class="topic-title">Indicaciones Formales del Soporte Nutricional Artificial</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-blue"></span>Jerarquía de indicación: primero la evidencia</div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Modalidad</th><th>Indicación</th><th>Temporalidad</th></tr></thead>
+            <tbody>
+              <tr><td>Nutrición Oral Enriquecida / ONS</td><td>Ingesta oral &lt;75% del requerimiento, tracto GI funcionante</td><td>Siempre que sea posible, primera línea</td></tr>
+              <tr><td>Nutrición Enteral (NE)</td><td>Vía oral insuficiente o contraindicada; tracto GI funcionante</td><td>Iniciar ≤24-48h en UCI; ≤5-7 días en hospitalización</td></tr>
+              <tr><td>Nutrición Parenteral (NP) Complementaria</td><td>NE insuficiente (&lt;60% meta) tras 3 días en UCI o 7 días en hospitalización</td><td>No iniciar antes de 3-7 días (excepto desnutrición severa preexistente)</td></tr>
+              <tr><td>Nutrición Parenteral (NP) Total</td><td>Contraindicación absoluta de NE: obstrucción intestinal, fístula de alto débito sin acceso distal, peritonitis grave, isquemia mesentérica</td><td>Inicio temprano solo si desnutrición severa preexistente</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="warning-box">
+          <strong>Principio fundamental:</strong> El tracto gastrointestinal es el mejor nutricionista. La NE mantiene la integridad de la mucosa, el tejido linfoide intestinal (GALT), previene la traslocación bacteriana y es 5-10 veces más barata que la NP. La NP es un puente terapéutico, nunca un tratamiento de confort.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">3</span><span class="topic-title">Diseño de Mezclas de Nutrición Parenteral</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-purple"></span>Macronutrientes en NP: proporciones y fuentes</div>
+        <div class="formula-grid">
+          <div class="formula-card"><div class="label">Glucosa (dextrosa)</div><div class="value">50-60% del aporte no proteico. Máx: 4-5 mg/kg/min</div></div>
+          <div class="formula-card"><div class="label">Lípidos</div><div class="value">30-40% del aporte no proteico. Máx: 1.5 g/kg/día</div></div>
+          <div class="formula-card"><div class="label">Aminoácidos</div><div class="value">1.0-2.0 g/kg/día (0.16-0.32 g N/kg/día)</div></div>
+          <div class="formula-card"><div class="label">Ratio kcal:N</div><div class="value">100-150 kcal no proteicas / 1g N</div></div>
+        </div>
+        <h4>Mezcla 2:1 (glucosa + aminoácidos, sin lípidos):</h4>
+        <ul>
+          <li>Indicada en: hipertrigliceridemia >400 mg/dL, pancreatitis aguda severa (controversia), alergia a proteína del huevo (lecitina de soja) en formulaciones antiguas.</li>
+          <li>Osmolaridad generalmente superior → requiere acceso central.</li>
+          <li>Desventaja: deficiencia de ácidos grasos esenciales si se prolonga >2-4 semanas.</li>
+        </ul>
+        <h4>Mezcla 3:1 ("all-in-one" o bolsa triple cámara):</h4>
+        <ul>
+          <li>Glucosa + Aminoácidos + Emulsión lipídica en una sola bolsa. Estabilidad fisicoquímica: 24-48h (refrigerada) o 7 días (bolsas industriales selladas).</li>
+          <li>La adición de electrolitos, vitaminas y oligoelementos DEBE hacerse en condiciones asépticas (campana de flujo laminar).</li>
+          <li>Ventajas: menor manipulación, menos riesgo de infección, mejor tolerancia metabólica, aporte de ácidos grasos esenciales.</li>
+        </ul>
+        <h4>Selección de emulsiones lipídicas:</h4>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Tipo</th><th>Composición</th><th>Indicación preferente</th></tr></thead>
+            <tbody>
+              <tr><td>Soja pura (LCT)</td><td>ω-6 elevado (~54% LA)</td><td>En desuso por efecto proinflamatorio</td></tr>
+              <tr><td>MCT/LCT (50/50)</td><td>Triglicéridos de cadena media + larga</td><td>Estrés metabólico, hepatopatía moderada</td></tr>
+              <tr><td>Oliva/Soja (SMOF)</td><td>ω-9 (+60%), algo ω-3 y vitamina E</td><td>Hepatoprotector, SIBO, EII</td></tr>
+              <tr><td>SMOF (Soja+MCT+Oliva+Pescado)</td><td>ω-3 (EPA/DHA ~15%), vitamina E</td><td>Primera línea en UCI, cirugía mayor, oncología. Hepatoprotector, antiinflamatorio.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-teal"></span>Cálculo de osmolaridad: periférica vs. central</div>
+        <div class="highlight-box">
+          <strong>Fórmula de osmolaridad estimada (mOsm/L):</strong><br>
+          Osm = [Glucosa (g/L) × 5.5] + [Aminoácidos (g/L) × 8] + [Emulsión lipídica (g/L) × 1.4] + [Electrolitos (mEq/L)] + [Resto aditivos]
+        </div>
+        <div class="formula-grid">
+          <div class="formula-card"><div class="label">Vía periférica (PIV)</div><div class="value">&lt;900 mOsm/L (máx seguro)</div></div>
+          <div class="formula-card"><div class="label">Vía central (CVC/PICC)</div><div class="value">Sin límite práctico de osmolaridad</div></div>
+          <div class="formula-card"><div class="label">Tromboflebitis &lt;900</div><div class="value">Riesgo bajo con catéter corto &lt;72h/sitio</div></div>
+        </div>
+        <h4>Accesos vasculares para NP:</h4>
+        <ul>
+          <li><strong>CVC (catéter venoso central):</strong> Subclavia, yugular interna o femoral. Preferir subclavia (menor infección). Verificar posición en radiografía antes de iniciar NP.</li>
+          <li><strong>PICC (catéter central de inserción periférica):</strong> Basílica, cefálica, braquial. Ideal para NP domiciliaria de larga duración. Punta en unión cavoatrial.</li>
+          <li><strong>Puerto implantable (PAC):</strong> NP domiciliaria crónica. SIC, falla intestinal permanente.</li>
+          <li><strong>Periférica (PVC):</strong> NP de corta duración (&lt;7-10 días), osmolaridad &lt;900 mOsm/L, sin acceso central posible. Cambiar sitio c/72h.</li>
+        </ul>
+        <h4>Micronutrientes en NP — aporte diario obligatorio:</h4>
+        <ul>
+          <li>Vitaminas: mezcla multivitamínica estándar (AMA formulation: A, D, E, K, C, B1, B2, B3, B5, B6, B7, B9, B12) añadida en el momento de la infusión.</li>
+          <li>Oligoelementos: Zn (3-5 mg), Cu (0.3-0.5 mg), Mn (55 µg — ojo: toxicidad hepática en NP prolongada), Se (20-60 µg), Cr (10-15 µg), Mo (19 µg).</li>
+          <li><strong>Énfasis especial en NP prolongada (>4 semanas):</strong> Vigilar Mn, Cu, vitamina K, zinc (pérdidas aumentadas en fístulas/diarrea).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">4</span><span class="topic-title">Monitoreo, Complicaciones y Progresión</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="subsection-label"><span class="dot dot-amber"></span>Protocolo de monitoreo en NP</div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Parámetro</th><th>Frecuencia</th><th>Meta / Alerta</th></tr></thead>
+            <tbody>
+              <tr><td>Glucemia capilar</td><td>c/6h (inicio) → c/12h (estable)</td><td>140-180 mg/dL en UCI; &lt;140 en hospitalización</td></tr>
+              <tr><td>Electrolitos (Na, K, Cl, P, Mg)</td><td>Diario las primeras 72h → c/48-72h</td><td>Corrección antes de aumentar aporte</td></tr>
+              <tr><td>Triglicéridos</td><td>Basal + c/72h si >200 mg/dL</td><td>&lt;400 mg/dL para continuar lípidos IV</td></tr>
+              <tr><td>Función hepática (TGO, TGP, FA, GGT, BD)</td><td>Semanal</td><td>Colestasis en NP prolongada: ↑ FA/GGT/BD</td></tr>
+              <tr><td>Balance hídrico</td><td>Diario (peso + diuresis)</td><td>Objetivo: balance neutro o levemente negativo</td></tr>
+              <tr><td>Prealbúmina</td><td>Semanal</td><td>↑ = respuesta anabólica. Falsamente baja en inflamación.</td></tr>
+              <tr><td>Balance nitrogenado</td><td>Semanal en NP prolongada</td><td>Meta: 0 a +2 g/día en rehabilitación</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="danger-box">
+          <strong>Hepatopatía asociada a NP (IFALD):</strong> Colestasis → esteatosis → fibrosis. Factores de riesgo: duración >4 semanas, sobrealimentación calórica, emulsión de soja pura, sepsis recurrente, prematuridad (pediatría). Prevención: ciclado de NP (12-18h), cambio a emulsión SMOF, iniciar NE mínima trófica cuando sea posible, limitar glucosa total.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-header" onclick="toggle(this)">
+      <div class="topic-left"><span class="topic-num">5</span><span class="topic-title">Caso Clínico de Cierre</span></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="topic-body">
+      <div class="subsection">
+        <div class="case-box">
+          <div class="case-header">Caso 1.4 · Diseño de NP en fístula enterocutánea postoperatoria</div>
+          <p style="font-size:13.5px; line-height:1.7; margin-bottom:1rem;">Hombre de 52 años, colecistectomía laparoscópica complicada con lesión de vía biliar → reconversión a cirugía abierta → fuga anastomótica al 5° día PO → fístula enterocutánea de alto débito (débito: 1200 mL/24h). IMC 24.5 kg/m², peso 78 kg. Ayuno absoluto indicado. Acceso: CVC subclavio derecho (confirmado por Rx). Sin tracto GI funcionante para NE (obstrucción mecánica parcial).</p>
+          <div class="case-data-grid">
+            <div class="case-datum"><div class="dlabel">Albúmina</div><div class="dvalue">2.4 g/dL</div></div>
+            <div class="case-datum"><div class="dlabel">Prealbúmina</div><div class="dvalue">10 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">Na</div><div class="dvalue">128 mEq/L ↓</div></div>
+            <div class="case-datum"><div class="dlabel">K</div><div class="dvalue">3.2 mEq/L ↓</div></div>
+            <div class="case-datum"><div class="dlabel">Glucemia</div><div class="dvalue">155 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">TGP/TGO</div><div class="dvalue">Normal</div></div>
+            <div class="case-datum"><div class="dlabel">TG</div><div class="dvalue">185 mg/dL</div></div>
+            <div class="case-datum"><div class="dlabel">PCR</div><div class="dvalue">210 mg/L ↑↑</div></div>
+          </div>
+          <div class="q-card"><div class="q-label">Pregunta 1</div><div class="q-text">Diseñe la mezcla de NP 3:1 para este paciente (78 kg, estrés severo PCR 210): especifique aporte calórico total (kcal/día), gramos de glucosa, aminoácidos y lípidos, distribución porcentual, tipo de emulsión lipídica seleccionada y justificación. Calcule la osmolaridad resultante y determine si es apta para vía periférica.</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 2</div><div class="q-text">El fistula drena 1200 mL/día de contenido entérico. ¿Qué electrolitos están siendo perdidos en mayor cantidad según la localización intestinal de la fístula (yeyunal proximal) y cómo ajusta usted la reposición en la NP o en soluciones IV paralelas? ¿Qué marcadores bioquímicos de las pérdidas por la fístula debe monitorear diariamente?</div></div>
+          <div class="q-card"><div class="q-label">Pregunta 3</div><div class="q-text">A la 3ª semana de NP total, el perfil hepático muestra FA 420 U/L (3× normal) y GGT 380 U/L con bilirrubina directa 2.1 mg/dL. ¿Cómo diagnostica y clasifica esta complicación? ¿Cuál es su estrategia de manejo (cambio de emulsión, ciclado, introducción de NE mínima, ácido ursodesoxicólico) según la evidencia ESPEN 2023?</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = ['t1','t2','t3','t4'].indexOf(id);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+function toggle(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.chevron');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  body.style.display = isOpen ? 'none' : 'block';
+  chevron.classList.toggle('open', !isOpen);
+}
+
+document.querySelectorAll('.topic-body.open').forEach(body => {
+  body.style.display = 'block';
+});
+</script>
+</body>
+</html>
